@@ -1,0 +1,50 @@
+# BlueBuild Recipe for Gaming Desktop
+name: custom-gaming-desktop
+description: Advanced gaming and developer build based on Bazzite KDE Nvidia.
+base-image: ghcr.io/ublue-os/bazzite-nvidia
+image-version: stable
+
+modules:
+  # Install native RPM packages
+  - type: rpm-ostree
+    install:
+      - git
+      - nodejs
+      - npm
+      - python3
+      - python3-pip
+      - code # VS Code
+      - ipmitool
+
+  # Configure VS Code repository and keys (if not present)
+  # and install VS Code extensions (using a systemd user configuration or script)
+  - type: script
+    snippets:
+      # Pre-download the LM Studio AppImage and make it available system-wide
+      - |
+        echo "Installing LM Studio AppImage..."
+        mkdir -p /usr/lib/lmstudio
+        curl -L -o /usr/lib/lmstudio/lmstudio.AppImage "https://releases.lmstudio.ai/linux/x86/latest/LM_Studio-latest.AppImage" || true
+        chmod +x /usr/lib/lmstudio/lmstudio.AppImage
+        ln -sf /usr/lib/lmstudio/lmstudio.AppImage /usr/bin/lm-studio
+
+      # Create desktop entry for LM Studio
+      - |
+        echo "Creating desktop entry for LM Studio..."
+        mkdir -p /usr/share/applications
+        cat << 'EOF' > /usr/share/applications/lm-studio.desktop
+        [Desktop Entry]
+        Name=LM Studio
+        Exec=/usr/bin/lm-studio --no-sandbox
+        Icon=system-run
+        Type=Application
+        Categories=Development;Science;IDE;Qt;
+        Comment=Run LLMs locally on your GPU.
+        Terminal=false
+        EOF
+
+      # Preinstall VS Code extensions system-wide (using extensions directory)
+      - |
+        echo "Configuring VS Code defaults..."
+        # Add Gemini Code Assist extension to the pre-installation list
+        mkdir -p /usr/share/code/resources/app/extensions

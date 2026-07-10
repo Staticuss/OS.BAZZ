@@ -1,0 +1,52 @@
+# BlueBuild Recipe for Server
+name: custom-server
+description: Advanced server build with GUI based on Kinoite KDE Nvidia.
+base-image: ghcr.io/ublue-os/kinoite-nvidia
+image-version: stable
+
+modules:
+  # Install native RPM packages for server administration, virtualization, and storage
+  - type: rpm-ostree
+    install:
+      - ipmitool
+      - smartmontools
+      - cockpit
+      - cockpit-podman
+      - cockpit-networkmanager
+      - cockpit-storaged
+      - libvirt
+      - qemu-kvm
+      - virt-install
+      - virt-manager
+      - code # VS Code
+      - git
+      - nodejs
+      - npm
+      - python3
+      - python3-pip
+
+  # Setup Systemd services and file configurations
+  - type: files
+    files:
+      - src: files/etc/systemd/system/dell-fan-control.service
+        dest: /etc/systemd/system/dell-fan-control.service
+      - src: files/usr/bin/dell-fan-control.sh
+        dest: /usr/bin/dell-fan-control.sh
+
+  - type: script
+    snippets:
+      # Enable virtualization services
+      - |
+        systemctl enable libvirtd.service
+        systemctl enable cockpit.socket
+        systemctl enable dell-fan-control.service || true
+
+      # Download and Install Dell PERC CLI (perccli) for H730 controller
+      - |
+        echo "Fetching Dell PERC H730 management tools..."
+        mkdir -p /tmp/perccli
+        curl -L -o /tmp/perccli/perccli.rpm "https://dl.dell.com/FOLDER07949313M/1/perccli-007.1623.0000.0000-1.noarch.rpm" || true
+        if [ -f /tmp/perccli/perccli.rpm ]; then
+          rpm -ivh /tmp/perccli/perccli.rpm || true
+          ln -sf /opt/MegaRAID/perccli/perccli64 /usr/bin/perccli
+        fi

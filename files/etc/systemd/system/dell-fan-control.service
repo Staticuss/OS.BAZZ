@@ -1,0 +1,14 @@
+[Unit]
+Description=Dell PowerEdge R730xd Dynamic Fan Control Daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/dell-fan-control.sh
+Restart=always
+RestartSec=5
+# Safety fallback: restore automatic iDRAC control when service stops
+ExecStopPost=/usr/bin/ipmitool raw 0x30 0x30 0x01 0x01
+
+[Install]
+WantedBy=multi-user.target
