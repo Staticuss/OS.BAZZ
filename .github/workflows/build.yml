@@ -44,4 +44,4 @@ jobs:
           cosign_private_key: ${{ env.CLEAN_SIGNING_KEY }}
           registry_token: ${{ github.token }}
         env:
-          COSIGN_PASSWORD: "mypurchasedsecretpassword"
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
