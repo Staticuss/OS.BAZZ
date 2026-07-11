@@ -11,8 +11,8 @@ jobs:
 
       - name: Generate Keys
         run: |
-          # Generate keys non-interactively with a truly empty password on Linux
-          printf "\n\n" | cosign generate-key-pair
+          # Generate keys non-interactively with the password 'password' on Linux
+          printf "password\npassword\n" | cosign generate-key-pair
           
           echo "=========================================="
           echo "COPY THE PRIVATE KEY BELOW FOR SIGNING_SECRET:"
