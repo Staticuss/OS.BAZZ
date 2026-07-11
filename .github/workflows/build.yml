@@ -31,13 +31,25 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@main
 
-      - name: Verify Key Decryption
+      - name: Diagnose Key
         env:
-          COSIGN_PASSWORD: "password"
           SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
         run: |
           echo "$SIGNING_SECRET" > test_cosign.key
-          cosign public-key --key test_cosign.key
+          echo "=== Key file info ==="
+          wc -c test_cosign.key
+          wc -l test_cosign.key
+          head -1 test_cosign.key
+          tail -1 test_cosign.key
+          md5sum test_cosign.key
+          echo "=== Trying empty password ==="
+          COSIGN_PASSWORD="" cosign public-key --key test_cosign.key 2>&1 || true
+          echo "=== Trying 'password' ==="
+          COSIGN_PASSWORD="password" cosign public-key --key test_cosign.key 2>&1 || true
+          echo "=== Trying with printf newline ==="
+          COSIGN_PASSWORD=$'\n' cosign public-key --key test_cosign.key 2>&1 || true
+          echo "=== Hex dump of first 100 bytes ==="
+          xxd test_cosign.key | head -7
           rm test_cosign.key
 
       - name: Build and Push Image
