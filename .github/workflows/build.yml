@@ -28,6 +28,15 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+      - name: Verify Key Decryption
+        env:
+          COSIGN_PASSWORD: "password"
+          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
+        run: |
+          echo "$SIGNING_SECRET" > test_cosign.key
+          cosign public-key --key test_cosign.key
+          rm test_cosign.key
+
       - name: Build and Push Image
         uses: blue-build/github-action@v1
         with:
