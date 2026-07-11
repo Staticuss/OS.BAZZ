@@ -1,6 +1,6 @@
-name: Generate Passwordless Cosign Keys
+name: Generate Cosign Keys
 on:
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   generate:
@@ -9,17 +9,25 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@main
 
-      - name: Generate Keys
+      - name: Generate and Verify Keys
         run: |
-          # Generate keys using environment variable to ensure exact password matching
+          # Generate keys with exact password via env var
           COSIGN_PASSWORD="password" cosign generate-key-pair
           
-          echo "=========================================="
-          echo "COPY THE PRIVATE KEY BELOW FOR SIGNING_SECRET:"
-          echo "=========================================="
-          cat cosign.key
-          echo "=========================================="
-          echo "COPY THE PUBLIC KEY BELOW FOR cosign.pub:"
-          echo "=========================================="
+          # Immediately verify decryption works
+          echo "=== Verifying key decryption ==="
+          COSIGN_PASSWORD="password" cosign public-key --key cosign.key
+          echo "=== Verification PASSED ==="
+          
+          # Show public key for reference
+          echo "=== PUBLIC KEY ==="
           cat cosign.pub
-          echo "=========================================="
+
+      - name: Upload Keys as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosign-keys
+          path: |
+            cosign.key
+            cosign.pub
+          retention-days: 1
