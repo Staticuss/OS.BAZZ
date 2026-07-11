@@ -1,0 +1,25 @@
+name: Generate Passwordless Cosign Keys
+on:
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@main
+
+      - name: Generate Keys
+        run: |
+          # Generate keys non-interactively with a truly empty password on Linux
+          printf "\n\n" | cosign generate-key-pair
+          
+          echo "=========================================="
+          echo "COPY THE PRIVATE KEY BELOW FOR SIGNING_SECRET:"
+          echo "=========================================="
+          cat cosign.key
+          echo "=========================================="
+          echo "COPY THE PUBLIC KEY BELOW FOR cosign.pub:"
+          echo "=========================================="
+          cat cosign.pub
+          echo "=========================================="
